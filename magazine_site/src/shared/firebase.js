@@ -13,9 +13,11 @@ import 'firebase/auth'
 
 }
 firebase.initializeApp(firebaseConfig);
+
+const apiKey = firebaseConfig.apiKey
 const auth = firebase.auth();
 
-export { auth };
+export { auth,apiKey };
 
 
 

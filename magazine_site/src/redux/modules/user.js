@@ -10,6 +10,7 @@ import {createAction,handleActions} from "redux-actions"
 import {produce} from "immer"
 import {setCookie,getCookie,deleteCookie} from "../../shared/cookie"
 import { auth } from "../../shared/firebase";
+import firebase from 'firebase/app'
 
 
 // 액션타입 정의 == actions => action : 상태의 변화가 필요할때 액션 발생
@@ -56,18 +57,58 @@ const user_initial = {
 // }
 
 const loginFB = (id,pwd) => {
-    return function(dispatch, getState,{history}) { // history는 페이지이동할때 쓰임
-        auth.signInWithEmailAndPassword(id, pwd)
+    return function(dispatch, getState,{history}) {  // history는 페이지이동할때 쓰임
+        
+        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).then((res) => {
+            auth.signInWithEmailAndPassword(id,pwd)
             .then((user) => { 
                 console.log(user) // 로그인 한 다음 작업
-                dispatch(setUser(user_name:user_name, id:id,user_profile:""))
-  })
-  .catch((error) => {
-    var errorCode = error.code;
-    var errorMessage = error.message;
-  });
-    } 
-}
+                dispatch(setUser({
+                    user_name:user.user.displayName, 
+                    id:id,
+                    user_profile:"",
+                    uid:user.user.uid,
+
+                }))
+                history.push('/')
+                })
+                .catch((error) => {
+                var errorCode = error.code;
+                var errorMessage = error.message;
+
+                console.log(errorCode,errorMessage)
+                });
+            }) 
+
+        }
+    
+    }
+
+    const loginCheckFB = () => {
+        return function(dispatch,getState,{history}) {
+            auth.onAuthStateChanged((user) => {  // user가 있냐 없냐 확인인
+                if(user){
+                    dispatch(setUser({
+                        user_name: user.displayName,
+                        user_profile: "",
+                        id: user.email,
+                        uid: user.uid,
+                    }))
+                }else{ // 
+                   dispatch(logOut)
+                }
+            })
+        }
+    }
+
+    const logoutFB = () => {
+        return function (dispatch, getState, {history}) {
+            auth.signOut().then(() => {
+                dispatch(logOut())
+                history.replace('/') //뒤로가기를 해도 전에 갔던 페이지가 나오지 않는다.
+            })
+        }
+    }
 
 
 
@@ -82,7 +123,13 @@ const signupFB = (id,pwd,user_name) => {
 
             auth.currentUser.updateProfile({
                 displayName:user_name, }).then(() => {
-                dispatch(setUser({user_name:user_name, id:id,user_profile:""}))
+                dispatch(setUser({
+                    user_name:user_name, 
+                    id:id,
+                    user_profile:"",
+                    uid:user.user.uid,
+
+                }))
                 history.push('/')
                 // Update successful
                 }).catch((error) => {
@@ -126,11 +173,12 @@ initialState)
 
 // action creator export =>  액션생성함수를 다른데에서 가져다 쓰기 위해 묶어서 내보냄
 const actionCreators = {
-    setUser,
     logOut,
     getUser,
     //loginAction, 파이어베이스 로그인 할땐 필요x
     signupFB,
     loginFB,
+    loginCheckFB,
+    logoutFB,
 }
 export { actionCreators } 
