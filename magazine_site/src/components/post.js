@@ -11,12 +11,16 @@ function Post(props){
     return(
         <>
             <Grid>
-                <Grid is_flex >
+                <Grid is_flex padding = "16px" >
+                    <Grid is_flex width ="auto">
                     <Image shape="Circle" src = {props.src}/>
                     <Text bold >{props.user_info.user_name}</Text>
+                    </Grid>
+                    <Grid is_flex width ="auto">
                     <Text >{props.user_time}</Text>
+                    </Grid>
                 </Grid>
-                <Grid padding = "16px">
+                <Grid padding = "16px" width ="auto">
                       <Text size ="20px">{props.contents}</Text>
 
                 </Grid>
